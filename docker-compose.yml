@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+    bot:
+        build: .
+        command: /bin/bash -c "python /app/botTest.py"
+        volumes:
+            - .:/app
+        env_file:
+            - .env
