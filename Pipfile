@@ -4,7 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-python-telegram-bot = "*"
+python-telegram-bot = {extras = ["socks"], version = "*"}
+sqlalchemy = "*"
 
 [dev-packages]
 autopep8 = "*"
