@@ -49,7 +49,6 @@ def start_handler(update, context):
     update.message.reply_text(
         "Hello from Python!\nPress /random to get random number")
 
-
 def random_handler(update, context):
     # Creating a handler-function for /random command
     number = random.randint(0, 10)
@@ -63,21 +62,18 @@ def print_money(update, context):
         update.effective_user["id"], user.money))
     update.message.reply_text("Your money: {}".format(user.money))
 
-
 if __name__ == '__main__':
     logger.info("Starting bot")
     updater = Updater(TOKEN)
-    # updater = Updater(TOKEN, use_context=True,
-    #                   request_kwargs=REQUEST_KWARGS)
+    
+    
     db_session.global_init("db/slaves.db")
 
-    
     user = User()
-    user.name = "Пользователь 1"
-    user.money = 123
-    user.parent_id = 123456
-    user.hashed_password = "qwer"
-    print(user.money)
+    user.name = "guest"
+    user.money = 0
+    user.parent_id = None
+    user.hashed_password = ""
     db_sess = db_session.create_session()
     db_sess.add(user)
     db_sess.commit()
