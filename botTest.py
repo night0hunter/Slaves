@@ -62,6 +62,14 @@ def print_money(update, context):
         update.effective_user["id"], user.money))
     update.message.reply_text("Your money: {}".format(user.money))
 
+def rating(update, context):
+    pass
+
+def slaves_purchasing(update, context):
+    pass
+
+def profile(update, context):
+    pass
 if __name__ == '__main__':
     logger.info("Starting bot")
     updater = Updater(TOKEN)
