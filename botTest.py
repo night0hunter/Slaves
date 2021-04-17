@@ -6,7 +6,7 @@ from data import db_session
 from telegram.ext import Updater, CommandHandler, CallbackContext
 from data.users import User
 import sqlite3
-
+from sqlalchemy import desc, select
 
 # Enabling logging  
 logging.basicConfig(level=logging.INFO,
@@ -57,10 +57,7 @@ def random_handler(update, context):
     update.message.reply_text("Random number: {}".format(number))
 
 def print_money(update, context):
-    global cur
-    global con
     cur_id = update.effective_user["id"]
-    # user_money = cur.execute(f"""SELECT money FROM users WHERE id = '{cur_id}'""").fetchone()
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.id == cur_id).first()
     db_sess.commit()
@@ -69,8 +66,12 @@ def print_money(update, context):
     update.message.reply_text("Your money: {}".format(user.money))
 
 def rating(update, context):
-    result = cur.execute("""SELECT * FROM users ORDER BY money DESC""").fetchall()
-    print(result)
+    # result = cur.execute("""SELECT * FROM users ORDER BY money DESC""").fetchall()
+    db_sess = db_session.create_session()
+    users = db_sess.query(User).order_by(User.money.desc())
+    db_sess.commit()
+    text = "\n".join([f"{user.name}:    {user.money}" for user in users])
+    update.message.reply_text(text)
 
 def slaves_purchasing(update, context):
     pass
