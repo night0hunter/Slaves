@@ -48,7 +48,7 @@ def start_handler(update, context):
     db_sess = db_session.create_session()
     db_sess.add(user)
     db_sess.commit()
-
+    update.message.reply_text("Пользователь успешно зарегистрирован!")
 def random_handler(update, context):
     # Creating a handler-function for /random command
     number = random.randint(0, 10)
@@ -67,6 +67,7 @@ def print_money(update, context):
 
 def rating(update, context):
     # result = cur.execute("""SELECT * FROM users ORDER BY money DESC""").fetchall()
+    logger.info("User {} viewed rating".format(update.effective_user["id"]))
     db_sess = db_session.create_session()
     users = db_sess.query(User).order_by(User.money.desc())
     db_sess.commit()
@@ -77,6 +78,7 @@ def slaves_purchasing(update, context):
     pass
 
 def profile(update, context):
+    logger.info("User {} viewed profile".format(update.effective_user["id"]))
     cur_id = update.effective_user["id"]
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.id == cur_id).first()
