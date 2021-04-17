@@ -77,7 +77,12 @@ def slaves_purchasing(update, context):
     pass
 
 def profile(update, context):
-    pass
+    cur_id = update.effective_user["id"]
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.id == cur_id).first()
+    db_sess.commit()
+    update.message.reply_text(f"Name: {user.name}\nMoney: {user.money}\nYour owner: {user.parent_id}")
+
 if __name__ == '__main__':
     logger.info("Starting bot")
     updater = Updater(TOKEN)
@@ -91,5 +96,6 @@ if __name__ == '__main__':
     updater.dispatcher.add_handler(CommandHandler("random", random_handler))
     updater.dispatcher.add_handler(CommandHandler("money", print_money))
     updater.dispatcher.add_handler(CommandHandler("rating", rating))
+    updater.dispatcher.add_handler(CommandHandler("profile", profile))
 
     run(updater)
