@@ -38,7 +38,6 @@ else:
 
 
 def start_handler(update, context):
-    # Creating a handler-function for /start command
     logger.info("User {} started bot".format(update.effective_user))
 
     user = User()
@@ -58,12 +57,16 @@ def random_handler(update, context):
     update.message.reply_text("Random number: {}".format(number))
 
 def print_money(update, context):
+    global cur
+    global con
     cur_id = update.effective_user["id"]
-    user_money = cur.execute(f"""SELECT money FROM users WHERE id = '{cur_id}'""")
-
+    # user_money = cur.execute(f"""SELECT money FROM users WHERE id = '{cur_id}'""").fetchone()
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.id == cur_id).first()
+    db_sess.commit()
     logger.info("User {} printed money {}".format(
-        update.effective_user["id"], user.money))
-    update.message.reply_text("Your money: {}".format(user_money))
+        cur_id, user.money))
+    update.message.reply_text("Your money: {}".format(user.money))
 
 def rating(update, context):
     result = cur.execute("""SELECT * FROM users ORDER BY money DESC""").fetchall()
