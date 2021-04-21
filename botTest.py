@@ -75,7 +75,30 @@ def rating(update, context):
     update.message.reply_text(text)
 
 def slaves_purchasing(update, context):
-    pass
+    def slaves_purchasing(update, context):
+    cur_id = update.effective_user["id"]
+    db_sess = db_session.create_session()
+
+    slave = update.message.text.split()
+    cur_user = db_sess.query(User).filter(User.id == cur_id).first()  
+    users = db_sess.query(User)
+    usersNames = "\n".join([user.name for user in users])
+    if slave[1] not in usersNames:
+        update.message.reply_text("Такого пользователя не существует!")
+        logger.info("User {} tried to buy non-existent person".format(cur_id))
+        
+    elif cur_user.name == slave[1]:
+        update.message.reply_text("Нельзя купить самого себя!")
+        logger.info("User {} tried to buy himself".format(cur_id))
+
+    else:
+        slaveObj = db_sess.query(User).filter(User.name == slave[1]).first()
+        slaveObj.parent_id = cur_id
+        update.message.reply_text("Успешно!")
+        logger.info("User {} bought user {}".format(cur_id, cur_user))
+
+
+    db_sess.commit()
 
 def profile(update, context):
     logger.info("User {} viewed profile".format(update.effective_user["id"]))
