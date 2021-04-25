@@ -3,19 +3,16 @@ import os
 import random
 import sys
 from data import db_session
+from sqlalchemy import desc, select
+from schedule import every, repeat, run_pending
 from telegram.ext import Updater, CommandHandler, CallbackContext
 from data.users import User
-import sqlite3
-from sqlalchemy import desc, select
+import time
+from datetime import timedelta
 
-# Enabling logging  
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger()
-
-con = sqlite3.connect("db\slaves.db")
-cur = con.cursor()
-# Getting mode, so we could define run function for local and Heroku setup
 mode = os.getenv("MODE")
 TOKEN = os.getenv("TOKEN")
 
@@ -49,12 +46,6 @@ def start_handler(update, context):
     db_sess.add(user)
     db_sess.commit()
     update.message.reply_text("Пользователь успешно зарегистрирован!")
-def random_handler(update, context):
-    # Creating a handler-function for /random command
-    number = random.randint(0, 10)
-    logger.info("User {} randomed number {}".format(
-        update.effective_user["id"], number))
-    update.message.reply_text("Random number: {}".format(number))
 
 def print_money(update, context):
     cur_id = update.effective_user["id"]
@@ -75,13 +66,13 @@ def rating(update, context):
     update.message.reply_text(text)
 
 def slaves_purchasing(update, context):
-    def slaves_purchasing(update, context):
     cur_id = update.effective_user["id"]
     db_sess = db_session.create_session()
 
     slave = update.message.text.split()
     cur_user = db_sess.query(User).filter(User.id == cur_id).first()  
     users = db_sess.query(User)
+    slave2 = db_sess.query(User).filter(slave[1] == User.name).first()
     usersNames = "\n".join([user.name for user in users])
     if slave[1] not in usersNames:
         update.message.reply_text("Такого пользователя не существует!")
@@ -92,10 +83,18 @@ def slaves_purchasing(update, context):
         logger.info("User {} tried to buy himself".format(cur_id))
 
     else:
-        slaveObj = db_sess.query(User).filter(User.name == slave[1]).first()
-        slaveObj.parent_id = cur_id
-        update.message.reply_text("Успешно!")
-        logger.info("User {} bought user {}".format(cur_id, cur_user))
+        if cur_user.money >= 100:
+            slaveObj = db_sess.query(User).filter(User.name == slave[1]).first()
+            if slaveObj.parent_id != None:
+                oldOwner = db_sess.query(User).filter(slaveObj.parent_id == User.id).first()
+                oldOwner.count_slaves -= 1
+
+            slaveObj.parent_id = cur_id
+            cur_user.count_slaves += 1
+            update.message.reply_text("Успешно!")
+            logger.info("User {} bought user {}".format(cur_id, slave2.id))
+        else:
+            update.message.reply_text("Недостаточно средств!")
 
 
     db_sess.commit()
@@ -108,19 +107,35 @@ def profile(update, context):
     db_sess.commit()
     update.message.reply_text(f"Name: {user.name}\nMoney: {user.money}\nYour owner: {user.parent_id}")
 
+def add_money(context: CallbackContext):
+    # con = sqlite3.connect('db\slaves.db')
+    # cur = con.cursor()
+    # result = cur.execute("""SELECT money FROM users""").fetchall()
+    # for i in result:
+    #     for j in i:
+    #         print(j)
+    db_sess = db_session.create_session()
+    users = db_sess.query(User)
+    for user in users:
+        user.money += 10 * user.count_slaves 
+    update.message.reply_text("Вывод профиля: /profile")
+
+
 if __name__ == '__main__':
+    db_session.global_init("db/slaves.db")
     logger.info("Starting bot")
     updater = Updater(TOKEN)
-    
-    
-    db_session.global_init("db/slaves.db")
+    j = updater.job_queue
+    j.run_repeating(add_money, timedelta(seconds=5))
 
-    
 
     updater.dispatcher.add_handler(CommandHandler("start", start_handler))
-    updater.dispatcher.add_handler(CommandHandler("random", random_handler))
     updater.dispatcher.add_handler(CommandHandler("money", print_money))
     updater.dispatcher.add_handler(CommandHandler("rating", rating))
     updater.dispatcher.add_handler(CommandHandler("profile", profile))
+    updater.dispatcher.add_handler(CommandHandler("buy", slaves_purchasing))
+    updater.dispatcher.add_handler(CommandHandler("help", help))
+
 
     run(updater)
+    

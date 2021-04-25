@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 python-telegram-bot = {extras = ["socks"], version = "*"}
 sqlalchemy = "*"
+schedule = "*"
 
 [dev-packages]
 autopep8 = "*"
