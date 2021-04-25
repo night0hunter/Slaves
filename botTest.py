@@ -88,7 +88,7 @@ def slaves_purchasing(update, context):
                 oldOwner = db_sess.query(User).filter(slaveObj.parent_id == User.id).first()
                 oldOwner.count_slaves -= 1
                 oldOwner.money += 50
-                cur_user.money += 100
+                cur_user.money -= 100
             slaveObj.parent_id = cur_id
             cur_user.count_slaves += 1
             update.message.reply_text("Успешно!")
@@ -100,12 +100,27 @@ def slaves_purchasing(update, context):
     db_sess.commit()
 
 def profile(update, context):
-    logger.info("User {} viewed profile".format(update.effective_user["id"]))
-    cur_id = update.effective_user["id"]
-    db_sess = db_session.create_session()
-    user = db_sess.query(User).filter(User.id == cur_id).first()
-    db_sess.commit()
-    update.message.reply_text(f"Name: {user.name}\nMoney: {user.money}\nYour owner: {user.parent_id}")
+    mess = update.message.text.split()
+    if len(mess) == 1:
+        logger.info("User {} viewed profile".format(update.effective_user["id"]))
+        cur_id = update.effective_user["id"]
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.id == cur_id).first()
+        db_sess.commit()
+        update.message.reply_text(f"Name: {user.name}\nMoney: {user.money}\nYour owner: {user.parent_id}")
+    else:
+        db_sess = db_session.create_session()
+        cur_id = update.effective_user["id"]
+        cur_user = db_sess.query(User).filter(User.id == cur_id).first()  
+        users = db_sess.query(User)
+        usersNames = "\n".join([user.name for user in users])
+        if mess[1] not in usersNames:
+            update.message.reply_text("Такого пользователя не существует!")
+            logger.info("User {} tried to check profile non-existent person".format(cur_id))
+        else:
+            slave2 = db_sess.query(User).filter(mess[1] == User.name).first()
+            update.message.reply_text(f"Name: {slave2.name}\nMoney: {slave2.money}\nHis owner: {slave2.parent_id}")
+        db_sess.commit()
 
 def add_money(context: CallbackContext):
     # con = sqlite3.connect('db\slaves.db')
