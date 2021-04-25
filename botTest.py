@@ -39,12 +39,12 @@ def start_handler(update, context):
     user = User()
     user.id = update.effective_user["id"]
     user.name = update.effective_user["username"]
-    user.money = 0
+    user.money = 100
     user.parent_id = None
     db_sess = db_session.create_session()
     db_sess.add(user)
     db_sess.commit()
-    update.message.reply_text("Пользователь успешно зарегистрирован!")
+    update.message.reply_text("User successfully registered!")
 
 def print_money(update, context):
     cur_id = update.effective_user["id"]
@@ -74,13 +74,15 @@ def slaves_purchasing(update, context):
     slave2 = db_sess.query(User).filter(slave[1] == User.name).first()
     usersNames = "\n".join([user.name for user in users])
     if slave[1] not in usersNames:
-        update.message.reply_text("Такого пользователя не существует!")
+        update.message.reply_text("This user doesn't exist!")
         logger.info("User {} tried to buy non-existent person".format(cur_id))
         
     elif cur_user.name == slave[1]:
-        update.message.reply_text("Нельзя купить самого себя!")
+        update.message.reply_text("You can't buy yourself!")
         logger.info("User {} tried to buy himself".format(cur_id))
-
+    elif cur_user.id == slave2.id:
+        update.message.reply_text("You can't buy your's slave")
+        logger.info("User {} tried to buy his slave".format(cur_id))
     else:
         if cur_user.money >= 100:
             slaveObj = db_sess.query(User).filter(User.name == slave[1]).first()
@@ -89,12 +91,14 @@ def slaves_purchasing(update, context):
                 oldOwner.count_slaves -= 1
                 oldOwner.money += 50
                 cur_user.money -= 100
+            else:
+                cur_user.money -= 100
             slaveObj.parent_id = cur_id
             cur_user.count_slaves += 1
-            update.message.reply_text("Успешно!")
+            update.message.reply_text("Success!")
             logger.info("User {} bought user {}".format(cur_id, slave2.id))
         else:
-            update.message.reply_text("Недостаточно средств!")
+            update.message.reply_text("Not enough money!")
 
 
     db_sess.commit()
@@ -106,8 +110,13 @@ def profile(update, context):
         cur_id = update.effective_user["id"]
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.id == cur_id).first()
+        if user.parent_id != None:
+            parent = db_sess.query(User).filter(User.id == user.parent_id).first()
+            update.message.reply_text(f"Name: {user.name}\nMoney: {user.money}\nYour owner: {parent.name}")
+        else:
+            update.message.reply_text(f"Name: {user.name}\nMoney: {user.money}\nYour owner: None")
         db_sess.commit()
-        update.message.reply_text(f"Name: {user.name}\nMoney: {user.money}\nYour owner: {user.parent_id}")
+        
     else:
         db_sess = db_session.create_session()
         cur_id = update.effective_user["id"]
@@ -115,28 +124,26 @@ def profile(update, context):
         users = db_sess.query(User)
         usersNames = "\n".join([user.name for user in users])
         if mess[1] not in usersNames:
-            update.message.reply_text("Такого пользователя не существует!")
-            logger.info("User {} tried to check profile non-existent person".format(cur_id))
+            update.message.reply_text("This user doesn't exist")
+            logger.info("User {} tried to check profile of non-existent person".format(cur_id))
         else:
             slave2 = db_sess.query(User).filter(mess[1] == User.name).first()
-            user2 = db_sess.query(User).filter(User.id == slave2.parent_id).first()
-            update.message.reply_text(f"Name: {slave2.name}\nMoney: {slave2.money}\nHis owner: {user2.name}")
+            if slave2.parent_id != None:
+                user2 = db_sess.query(User).filter(User.id == slave2.parent_id).first()
+                update.message.reply_text(f"Name: {slave2.name}\nMoney: {slave2.money}\nHis owner: {user2.name}")
+            else:
+                update.message.reply_text(f"Name: {slave2.name}\nMoney: {slave2.money}\nHis owner: None")
         db_sess.commit()
 
 def add_money(context: CallbackContext):
-    # con = sqlite3.connect('db\slaves.db')
-    # cur = con.cursor()
-    # result = cur.execute("""SELECT money FROM users""").fetchall()
-    # for i in result:
-    #     for j in i:
-    #         print(j)
     db_sess = db_session.create_session()
     users = db_sess.query(User)
     for user in users:
         user.money += 10 * user.count_slaves 
+    db_sess.commit()
 
 def help(update, context):
-    update.message.reply_text("Создание профиля: /start\nВывод профиля: /profile\nВывод денег: /money\nВывод рейтинга: /rating\nПокупка раба: /buy <username>")
+    update.message.reply_text("Creating profile: /start\nProfile print: /profile\nMoney print: /money\nRating print: /rating\nBuy slaves: /buy <username>")
 
 
 if __name__ == '__main__':
