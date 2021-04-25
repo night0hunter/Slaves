@@ -87,7 +87,8 @@ def slaves_purchasing(update, context):
             if slaveObj.parent_id != None:
                 oldOwner = db_sess.query(User).filter(slaveObj.parent_id == User.id).first()
                 oldOwner.count_slaves -= 1
-
+                oldOwner.money += 50
+                cur_user.money += 100
             slaveObj.parent_id = cur_id
             cur_user.count_slaves += 1
             update.message.reply_text("Успешно!")
