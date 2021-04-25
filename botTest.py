@@ -4,7 +4,6 @@ import random
 import sys
 from data import db_session
 from sqlalchemy import desc, select
-from schedule import every, repeat, run_pending
 from telegram.ext import Updater, CommandHandler, CallbackContext
 from data.users import User
 import time
