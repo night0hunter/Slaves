@@ -118,7 +118,9 @@ def add_money(context: CallbackContext):
     users = db_sess.query(User)
     for user in users:
         user.money += 10 * user.count_slaves 
-    update.message.reply_text("Вывод профиля: /profile")
+
+def help(update, context):
+    update.message.reply_text("Создание профиля: /start\nВывод профиля: /profile\nВывод денег: /money\nВывод рейтинга: /rating\nПокупка раба: /buy <username>")
 
 
 if __name__ == '__main__':
