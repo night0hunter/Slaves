@@ -119,7 +119,8 @@ def profile(update, context):
             logger.info("User {} tried to check profile non-existent person".format(cur_id))
         else:
             slave2 = db_sess.query(User).filter(mess[1] == User.name).first()
-            update.message.reply_text(f"Name: {slave2.name}\nMoney: {slave2.money}\nHis owner: {slave2.parent_id}")
+            user2 = db_sess.query(User).filter(User.id == slave2.parent_id).first()
+            update.message.reply_text(f"Name: {slave2.name}\nMoney: {slave2.money}\nHis owner: {user2.name}")
         db_sess.commit()
 
 def add_money(context: CallbackContext):
