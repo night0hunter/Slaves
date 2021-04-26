@@ -46,14 +46,19 @@ def start_handler(update, context):
     db_sess.commit()
     update.message.reply_text("User successfully registered!")
 
-def print_money(update, context):
+def money(update, context):
     cur_id = update.effective_user["id"]
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.id == cur_id).first()
     db_sess.commit()
     logger.info("User {} printed money {}".format(
         cur_id, user.money))
-    update.message.reply_text("Your money: {}".format(user.money))
+    if user.money >= 100:
+        count_slave_to_buy = user // 100
+        if count_slave_to_buy > 1:
+            update.message.reply_text(f"You have enough money to buy {} slaves".format(count_slave_to_buy))
+        else:
+            update.message.reply_text("You have enough money to buy a slave")
 
 def rating(update, context):
     # result = cur.execute("""SELECT * FROM users ORDER BY money DESC""").fetchall()
@@ -155,7 +160,7 @@ if __name__ == '__main__':
 
 
     updater.dispatcher.add_handler(CommandHandler("start", start_handler))
-    updater.dispatcher.add_handler(CommandHandler("money", print_money))
+    updater.dispatcher.add_handler(CommandHandler("money", money))
     updater.dispatcher.add_handler(CommandHandler("rating", rating))
     updater.dispatcher.add_handler(CommandHandler("profile", profile))
     updater.dispatcher.add_handler(CommandHandler("buy", slaves_purchasing))
