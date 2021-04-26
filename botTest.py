@@ -46,7 +46,7 @@ def start_handler(update, context):
     db_sess.commit()
     update.message.reply_text("User successfully registered!")
 
-def money(update, context):
+def calculation_money(update, context):
     cur_id = update.effective_user["id"]
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.id == cur_id).first()
@@ -54,9 +54,9 @@ def money(update, context):
     logger.info("User {} printed money {}".format(
         cur_id, user.money))
     if user.money >= 100:
-        count_slave_to_buy = user // 100
+        count_slave_to_buy = user.money // 100
         if count_slave_to_buy > 1:
-            update.message.reply_text(f"You have enough money to buy {} slaves".format(count_slave_to_buy))
+            update.message.reply_text("You have enough money to buy {} slaves".format(count_slave_to_buy))
         else:
             update.message.reply_text("You have enough money to buy a slave")
 
@@ -148,7 +148,7 @@ def add_money(context: CallbackContext):
     db_sess.commit()
 
 def help(update, context):
-    update.message.reply_text("Creating profile: /start\nProfile print: /profile\nMoney print: /money\nRating print: /rating\nBuy slaves: /buy <username>")
+    update.message.reply_text("Creating profile: /start\nProfile print: /profile\nMoney calculate: /money\nRating print: /rating\nBuy slaves: /buy <username>")
 
 
 if __name__ == '__main__':
@@ -160,7 +160,7 @@ if __name__ == '__main__':
 
 
     updater.dispatcher.add_handler(CommandHandler("start", start_handler))
-    updater.dispatcher.add_handler(CommandHandler("money", money))
+    updater.dispatcher.add_handler(CommandHandler("money", calculation_money))
     updater.dispatcher.add_handler(CommandHandler("rating", rating))
     updater.dispatcher.add_handler(CommandHandler("profile", profile))
     updater.dispatcher.add_handler(CommandHandler("buy", slaves_purchasing))
